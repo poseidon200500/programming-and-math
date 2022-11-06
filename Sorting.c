@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <math.h>
+
+
 //сортировка пузырьком
 void BubbleSort(int *arr, int len)  //работает корректно
 {
@@ -70,49 +72,55 @@ void PerestanSort(int *arr, int len) //работает корректно
         arr[len-1-i] = max;
     }
 }
-
-void QuickSort()
+//быстрая сортировка
+void QuickSort(int *arr, int left, int right) // left = 0, right = N
 {
-
-}
-
-void pivot(int *arr, int left, int right) // left = 0, right = N
-{
-    if ((right - left) > 1)
-    {
+    if ((right - left) > 1){
+    
         //алгоритм сортировки
-        int ser = arr[left];
         int ind = left;
+        int ind2 = right-1;
+        int ser = arr[left];
+        
         
         for (int i = left; i < right; i++){
+            
+
             if (arr[i] < ser){
+
                 int k = arr[ind];
                 arr[ind] = arr[i];
                 arr[i] = k;
+
                 ind++;
             }
         }
-        //если есть несколько серединных элементов
-        int ind2 = ind;
-        for(int i = ind; i < right; i++){
-            if (arr[i] == arr[ind])
-                ind2 = i;
-            else
-                break;
+        for (int i = right-1; i >= ind; i--){
+            
+            if (arr[i] > ser){
+
+                int k = arr[ind2];
+                arr[ind2] = arr[i];
+                arr[i] = k;
+
+                ind2--;
+            }
         }
-        //запускаем рекурсию на левый и правый подотрезки
-        pivot(arr,left,ind);
-        pivot(arr,ind2,right);
+        //printf("%d, %d\n", ind,ind2);
+        //если есть несколько серединных элементов
+    //запускаем рекурсию на левый и правый подотрезки
+        QuickSort(arr,left,ind);
+        QuickSort(arr,ind2+1,right);
     }
 }
 
 int main(){
     //инициализация переменных
     int mass[20] = {0};
-    //int mass2[20] = {0};
     int N = 0;
     //заполнение массива
     scanf("%d",&N);
+    
     for (int i = 0; i < N; i++)
         scanf("%d", &mass[i]);
     //сортировка массива
