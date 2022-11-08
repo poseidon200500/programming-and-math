@@ -1,10 +1,13 @@
 from fractions import Fraction
+import copy
 class Matrix:
     oprkoef = 1
     rang = 1
     def __init__(self,matrix):
         self.matrix = matrix
-
+        self.rows = len(matrix)
+        self.columns = len(matrix[0])
+    #полезные функции 
     def sorting(self):#сортировка матрицы по количеству главенствующих нулей(ступенчатый вид)
         #подумать как узнать знак определителя отсортированной матрицы
         k = len(self.matrix)
@@ -23,12 +26,16 @@ class Matrix:
         for i in range(len(self.matrix)):
             del self.matrix[i][-1]
     def draw(self):#выводит матрицу на экран
+
         print("==================")
         for i in range(len(self.matrix)):
             print(*self.matrix[i])
         print("==================")       
+    def gotoFraction(self):#перевод в простые дроби
+        for i in range(len(self.matrix)):
+                self.matrix[i] = list(map(Fraction,self.matrix[i]))           
     def gotoint(self):#если возможно перейти к целым числам 
-        flaf = 1
+        flag = 1
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
                 if self.matrix[i][j] != int(self.matrix[i][j]):
@@ -36,7 +43,9 @@ class Matrix:
         if flag:
             for i in range(len(self.matrix)):
                 self.matrix[i] = map(int,self.matrix[i])
-
+    @staticmethod
+    def Matrix_copy(matrix):#метод копирования матрицы
+        return copy.deepcopy(matrix)
 
     #переменная axis принимает значения "gor" и "vert"
     #три элементарных преобразования
@@ -65,24 +74,69 @@ class Matrix:
                 self.matrix[i][x] += koef * self.matrix[i][y]
    
     #функции расчёта определителей
-    def opred2(self,m): #матрица только 2 на 2! полностью переписать
-        return (m[0][0]*m[1][1] - m[0][1]*m[1][0])
-    def opred3(self,m): #матрица только 3 на 3 ! аналогично 
-        return ((m[0][0]*m[1][1]*m[2][2]) + (m[1][0]*m[2][1]+m[0][2]) + (m[0][1]*m[1][2]*m[2][0]) -
-                (m[0][2]*m[1][1]*m[2][0]) - (m[0][0]*m[1][2]*m[2][1]) - (m[0][1]*m[1][0]*m[2][2]) 
-            )
-    def opredn(self,m): #матрица n-го порядка (не реализована) n > 3
-        
-        for i in range(len(self.matrix)):
+    def opred2(self): #матрица только 2 на 2! полностью переписать
+        if len(self.rows) != 2 or len(self.columns) != 2:
+            return -1        
+        else:
+            return (self.matrix[0][0]*self.matrix[1][1] - self.matrix[0][1]*self.matrix[1][0])
+    def opred3(self): #матрица только 3 на 3 ! аналогично 
+        if len(self.rows) != 3 or len(self.columns) != 3:
+            return -1
+        else: 
+            return ((self.matrix[0][0] * self.matrix[1][1] * self.matrix[2][2]) +
+                    (self.matrix[1][0] * self.matrix[2][1] + self.matrix[0][2]) +
+                    (self.matrix[0][1] * self.matrix[1][2] * self.matrix[2][0]) -
+                    (self.matrix[0][2] * self.matrix[1][1] * self.matrix[2][0]) -
+                    (self.matrix[0][0] * self.matrix[1][2] * self.matrix[2][1]) -
+                    (self.matrix[0][1] * self.matrix[1][0] * self.matrix[2][2]) 
+                    )
+    def opredn(self): #матрица n-го порядка (не реализована) 
+        if self.rows != self.columns:
+            print("матрица не квадратная(функция opredn)")
+            return -1
+        if self.rows == 1:
+            return self.matrix[0]
+        if self.rows == 2:
+            self.opred2()
+        if self.rows == 3:
+            self.opred3()
+        else:#придумать как сделать рекурсию с подматрицами
             pass
-    
-    def transpon(self):
+
+    def transpon(self):#транспонирование матрицы
         for i in range(len(self.matrix)):
             for j in range(i,len(self.matrix[0])):
                 self.matrix[i][j],self.matrix[j][i] = self.matrix[j][i],self.matrix[i][j]
-    def obratmat(self):
-        pass
-    
+    def obratmat(self):#обратная матрица(только для квадратных матриц)
+        if self.columns != self.rows:
+            print("матрица не квадратная функция(obrat)")
+            return -1
+        #создание матрицы Г(а)
+        algdop = [[0 for i in range(self.columns*2)] for j in range(self.rows)]
+        for i in range(self.columns):
+            for j in range(self.rows):
+                algdop[i][j] = self.matrix[i][j]
+        for i in range(self.rows):
+            algdop[i][i+self.columns] = 1
+        algdop = Matrix(algdop)
+        algdop.gotoFraction()
+
+        for glav in range(algdop.rows):
+             # индексы главного элемента - [i][i] 
+            for j in range(algdop.rows):
+                if j == glav :
+                    pass 
+                else:
+                    if algdop.matrix[glav][glav] == 0:
+                        algdop.increase(glav,glav+self.columns,1,"vert")
+                    algdop.increase(j,glav,(-1)*(algdop.matrix[j][glav]/algdop.matrix[glav][glav]),"gor")            
+            algdop.multiplication(glav,1/algdop.matrix[glav][glav],"gor")
+
+        #выведение массива
+        print("==================")
+        for i in range(algdop.rows):
+            self.matrix[i] = algdop.matrix[i][self.columns:]
+            
     def Stupmatrix(self): #работает корректно, но можно сделать лучше
         glavx = 0 # место главы строки(столбец)
         glavy = 0 # главная строка, по которой проходит обнуление ряда(строка)
@@ -118,8 +172,7 @@ class Matrix:
             #3)обнулить столбец главы(кроме него), прибавив к каждой строке ниже главы строку главы умноженную на -1* элемент стоящий под главой
             for i in range(glavy+1,len(self.matrix)):
                 self.increase(i,glavy,-1*self.matrix[i][glavx],"gor") 
-    
-    
+        
     def rang(self):    #определяет ранг матрицы(не работает)
         #сведение к поиску диагонали ненулевых элементов максимальной длины
         rang = 0
@@ -137,7 +190,7 @@ class Matrix:
 
         return multimatrix
     @staticmethod
-    def mat_multipl(matrix1,matrix2):   #работает корректно при кол-во столбцов 1 матрицы = кол-во строк 2 матрицы
+    def matrix_multiplication(matrix1,matrix2):   #работает корректно при кол-во столбцов 1 матрицы = кол-во строк 2 матрицы
         #Работает корректно
         #а - строки, b - столбцы, перемножать матрицы можно только если a2 = b1
         multimatrix = [[0 for i in range(len(matrix2[0]))] for j in range(len(matrix1))]
@@ -152,16 +205,11 @@ class Matrix:
 
 #сделать переход к матрице улучшенного вида
 #=======================ввод
-a1,b1 = map(int,input().split())
-a2,b2 = map(int,input().split())
-matrix1 = []
-for i in range(a1):
-    matrix1.append(list(map(int,input().split())))
-matrix2 = []
-for i in range(a2):
-    matrix2.append(list(map(int,input().split())))
+L = int(input())
+matrix = []
+for i in range(L):
+    matrix.append(list(map(Fraction,input().split())))
 #=======================основное тело
-mat = Matrix.mat_multipl(matrix1,matrix2)
-mat = Matrix(mat)
+matrix = Matrix(matrix)
 #=======================вывод матрицы
-mat.draw()
+matrix2.draw()
