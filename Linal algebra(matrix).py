@@ -6,31 +6,27 @@ class Matrix:
     def __init__(self,matrix):
         self.matrix = matrix
         self.rows = len(matrix)
+        self.not_null_rows = self.rows
         self.columns = len(matrix[0])
+        self.not_null_columns = self.columns
     #полезные функции 
     def sorting(self):#сортировка матрицы по количеству главенствующих нулей(ступенчатый вид)
         #подумать как узнать знак определителя отсортированной матрицы
-        k = len(self.matrix)
-        for i in range(len(self.matrix)):
+        for i in range(self.rows):
             countr = 0
-            for j in range(len(self.matrix[i])):
+            for j in range(self.columns):
                 if self.matrix[i][j] == 0:
                     countr+=1
                 else:
-                    self.matrix[i].append(countr)
                     break
-            if len(self.matrix[i]) == k:
-                self.matrix[i].append(0)
+            self.matrix[i].append(countr)
         self.matrix.sort(key = lambda x: x[-1])
         
-        for i in range(len(self.matrix)):
+        for i in range(self.rows):
             del self.matrix[i][-1]
-    def draw(self):#выводит матрицу на экран
-
-        print("==================")
-        for i in range(len(self.matrix)):
-            print(*self.matrix[i])
-        print("==================")       
+    def gotoNotNull(self): #ещё не реализовано
+        for row in self.matrix:
+            pass
     def gotoFraction(self):#перевод в простые дроби
         for i in range(len(self.matrix)):
                 self.matrix[i] = list(map(Fraction,self.matrix[i]))           
@@ -43,6 +39,12 @@ class Matrix:
         if flag:
             for i in range(len(self.matrix)):
                 self.matrix[i] = map(int,self.matrix[i])
+    def draw(self):#выводит матрицу на экран
+
+        print("==================")
+        for i in range(len(self.matrix)):
+            print(*self.matrix[i])
+        print("==================")       
     @staticmethod
     def Matrix_copy(matrix):#метод копирования матрицы
         return copy.deepcopy(matrix)
@@ -137,7 +139,7 @@ class Matrix:
         for i in range(algdop.rows):
             self.matrix[i] = algdop.matrix[i][self.columns:]
             
-    def Stupmatrix(self): #работает корректно, но можно сделать лучше
+    def StupMatrix(self): #работает корректно, но можно сделать лучше
         glavx = 0 # место главы строки(столбец)
         glavy = 0 # главная строка, по которой проходит обнуление ряда(строка)
         for glavy in range(len(self.matrix)-1):
@@ -155,29 +157,31 @@ class Matrix:
             for i in range(glavy+1,len(self.matrix)):
                 self.increase(i,glavy,-1*self.matrix[i][glavx],"gor")    
         self.sorting()
+    
+    def BetterMatrix(self): #переход к улучшеному виду ступенчатой матрицы
+        self.StupMatrix()
+        self.gotoFraction()
+        for i in range(self.rows-1,0,-1):
 
-        glavx = 0 # место главы строки(столбец)
-        glavy = 0 # главная строка, по которой проходит обнуление ряда(строка)
-        for glavy in range(len(self.matrix)-1):
-            #1)найти индекс главы строки
-            for i in range(len(self.matrix[glavy])):
-                if (self.matrix[glavy][i] != 0) and (self.matrix[glavy][i] != Fraction(0,1)):
-                    glavx = i
+            glav = -1 #индекс главы в текущей строке
+            for j in range(self.columns-1,0,-1):
+                if self.matrix[i][j] != 0:
+                    glav = j
+                else:
                     break
-            if self.matrix[glavy][glavx] == 0:
-                self.matrix[glavy][glavx] = 1
-            #2)умножить строку на 1/глава, чтобы глава стал равен 1
-            self.multiplication(glavy,1/self.matrix[glavy][glavx],"gor")
 
-            #3)обнулить столбец главы(кроме него), прибавив к каждой строке ниже главы строку главы умноженную на -1* элемент стоящий под главой
-            for i in range(glavy+1,len(self.matrix)):
-                self.increase(i,glavy,-1*self.matrix[i][glavx],"gor") 
-        
+            if glav == -1:
+                pass
+            else:
+                self.multiplication(i,1/self.matrix[i][glav],"gor")
+                for row in range(i-1,-1,-1):
+                    self.increase(row,i,(-1)*self.matrix[row][glav],"gor")
+            
     def rang(self):    #определяет ранг матрицы(не работает)
-        #сведение к поиску диагонали ненулевых элементов максимальной длины
+
         rang = 0
-        self.Stupmatrix()
-        for i in range(len(self.matrix)):
+        self.BetterMatrix()
+        for i in range(self.rows):
             if self.matrix[i][i] != 0:
                 rang+=1
 
@@ -211,5 +215,6 @@ for i in range(L):
     matrix.append(list(map(Fraction,input().split())))
 #=======================основное тело
 matrix = Matrix(matrix)
+matrix.BetterMatrix()
 #=======================вывод матрицы
-matrix2.draw()
+matrix.draw()
